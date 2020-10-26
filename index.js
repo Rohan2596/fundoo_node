@@ -1,7 +1,7 @@
 var express=require('express');
 const { request, response } = require('express');
 var app =express();
-var port =process.env.PORT || 3001
+var port =process.env.PORT || 3002
 var User=require('./models/User');
 
 //importing body parser
@@ -37,17 +37,28 @@ app.post("/signup",async(request,response)=>{
         name:request.body.name,
         password:request.body.password
     });
-    await newUser
-    .save()
-    .then(()=>{
-        response.status(200).send(newUser);
-    })
-    .catch(err=>{
-        console.log("Error is:-  ",err.message);
-        
+    
+    await User.findOne({name:newUser.name})
+        .then(async profile=>{
+            if(!profile){
+                await newUser
+                .save()
+                .then(()=>{
+                    response.status(200).send(newUser);
+                })
+                .catch(err=>{
+                    console.log("Error is:-  ",err.message);
+                    
+                });
+            }else{
+            
+                response.send("User Already exists....");
+            }
+        }).catch(err=>{
+            console.log("Error is:-  "+err.message);
+            
+        });
     });
-})
-//Developing api for login purpose
 
 app.post("/login",async(request,response)=>{
     var loginUser={}
