@@ -13,6 +13,10 @@ const { profile } = require('console');
 //importing database
 var db=require('./mysetup/myurl').myurl
 
+//Encrypting  and becrypting password
+var bcryt=require('bcrypt')
+var saltrouds=10
+
 //Connection to Database
 mongoose
 .connect(db,{useNewUrlParser:true,useUnifiedTopology:true})
@@ -41,6 +45,11 @@ app.post("/signup",async(request,response)=>{
     await User.findOne({name:newUser.name})
         .then(async profile=>{
             if(!profile){
+                bcryt.hash(newUser.password,saltrouds,async(err,hash)=>{
+              if(err){
+
+              }else{
+                newUser.password=hash;
                 await newUser
                 .save()
                 .then(()=>{
@@ -50,6 +59,8 @@ app.post("/signup",async(request,response)=>{
                     console.log("Error is:-  ",err.message);
                     
                 });
+            }
+            })
             }else{
             
                 response.send("User Already exists....");
@@ -66,22 +77,27 @@ app.post("/login",async(request,response)=>{
     loginUser.password=request.body.password;
     await User.findOne({name:loginUser.name})
     .then(profile=>{
-       if(!profile){
-           response.send("user not exist");
-       }else{
-           if(profile.password==loginUser.password){
-               response.send("User Authenticated..")
-           }else{
-               response.send("User Unauthorized asscess.");
-           }
-       }
-        request.send("User not exists");
-    
-    })
-    .catch(err=>{
-        console.log("Error is:--- ",err.message);
-        
-    });
+        if (!profile) {
+            response.send("User not exist");
+          } else {
+            bcryt.compare(
+              loginUser.password,
+              profile.password,
+              async (err, result) => {
+                if (err) {
+                  console.log("Error is", err.message);
+                } else if (result == true) {
+                    response.send("User authenticated");
+                } else {
+                    response.send("User Unauthorized Access");
+                }
+              }
+            );
+          }
+        })
+        .catch(err => {
+          console.log("Error is ", err.message);
+        });
 })
 //Making Get Request 
 app.get('/',(request,response)=>{
