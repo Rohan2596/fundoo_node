@@ -8,7 +8,8 @@ var User=require('./models/User');
 var bodyparser=require('body-parser')
 
 //importing mongoose
-var mongoose=require('mongoose')
+var mongoose=require('mongoose');
+const { profile } = require('console');
 //importing database
 var db=require('./mysetup/myurl').myurl
 
@@ -46,7 +47,31 @@ app.post("/signup",async(request,response)=>{
         
     });
 })
+//Developing api for login purpose
 
+app.post("/login",async(request,response)=>{
+    var loginUser={}
+    loginUser.name=request.body.name;
+    loginUser.password=request.body.password;
+    await User.findOne({name:loginUser.name})
+    .then(profile=>{
+       if(!profile){
+           response.send("user not exist");
+       }else{
+           if(profile.password==loginUser.password){
+               response.send("User Authenticated..")
+           }else{
+               response.send("User Unauthorized asscess.");
+           }
+       }
+        request.send("User not exists");
+    
+    })
+    .catch(err=>{
+        console.log("Error is:--- ",err.message);
+        
+    });
+})
 //Making Get Request 
 app.get('/',(request,response)=>{
     response.status(200).send('Hi Welcome to Login registration API.');
