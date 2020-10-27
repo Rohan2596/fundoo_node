@@ -10,13 +10,18 @@ var bodyparser=require('body-parser')
 //importing mongoose
 var mongoose=require('mongoose');
 const { profile } = require('console');
+var secret=require('./mysetup/myurl').secret;
 //importing database
 var db=require('./mysetup/myurl').myurl
 
 //Encrypting  and becrypting password
-var bcryt=require('bcrypt')
+var bcryt=require('bcrypt');
+const passport = require('passport');
+const { sign } = require('crypto');
 var saltrouds=10
-
+//Jwt
+app.use(passport.initialize())
+var jsonwt=require("./token_jwt/jsonwtStrategy")(passport);
 //Connection to Database
 mongoose
 .connect(db,{useNewUrlParser:true,useUnifiedTopology:true})
@@ -88,6 +93,21 @@ app.post("/login",async(request,response)=>{
                   console.log("Error is", err.message);
                 } else if (result == true) {
                     response.send("User authenticated");
+                    const payload={
+                        id:profile.id,
+                        name:profile.name
+                    };
+                    jsonwt,sign(
+                        payload,
+                        secret,
+                        {expiresIn:3600},
+                        (err,token)=>{
+                            response.json({
+                                success:true,
+                                token:"Bearer " +token
+                            })
+                        }
+                    )
                 } else {
                     response.send("User Unauthorized Access");
                 }
